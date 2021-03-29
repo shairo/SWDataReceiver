@@ -2,6 +2,7 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Windows;
 using System.Windows.Input;
 
 namespace SWDataReceiver
@@ -137,9 +138,16 @@ namespace SWDataReceiver
                     return;
                 }
 
-                using (var file = File.CreateText(dialog.FileName))
+                try
                 {
-                    recorder.SaveRecords(file);
+                    using (var file = File.CreateText(dialog.FileName))
+                    {
+                        recorder.SaveRecords(file);
+                    }
+                }
+                catch(UnauthorizedAccessException e)
+                {
+                    MessageBox.Show("ファイルが開けませんでした。", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
