@@ -4,12 +4,15 @@ using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace SWDataReceiver
 {
     public class MainWindowModel : INotifyPropertyChanged, IDisposable
     {
         private Recorder recorder;
+        private DispatcherTimer timer;
+        private bool recordCountDirty;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -22,12 +25,28 @@ namespace SWDataReceiver
         public MainWindowModel()
         {
             recorder = new Recorder(13224);
-            recorder.OnRecordCountChanged += () => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DataCountLabel)));
+            recorder.OnRecordCountChanged += () => recordCountDirty = true;
 
             StartButtonCommand = new StartCommand(recorder);
             StopButtonCommand = new StopCommand(recorder);
             ClearButtonCommand = new ClearCommand(recorder);
             SaveAsButtonCommand = new SaveAsCommand(recorder);
+
+            timer = new DispatcherTimer();
+            timer.Tick += Timer_Tick;
+            timer.Interval = TimeSpan.FromMilliseconds(100);
+            timer.Start();
+        }
+
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            if (!recordCountDirty)
+            {
+                return;
+            }
+
+            recordCountDirty = false;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DataCountLabel)));
         }
 
         ~MainWindowModel()
@@ -39,6 +58,9 @@ namespace SWDataReceiver
         {
             recorder?.Dispose();
             recorder = null;
+
+            timer?.Stop();
+            timer = null;
         }
 
         public class StartCommand : ICommand

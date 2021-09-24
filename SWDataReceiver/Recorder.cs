@@ -34,7 +34,7 @@ namespace SWDataReceiver
         public Recorder(int port)
         {
             listener = new HttpListener();
-            listener.Prefixes.Add($"http://localhost:{port}/commit/");
+            listener.Prefixes.Add($"http://127.0.0.1:{port}/commit/");
 
             cts = new CancellationTokenSource();
             task = Task.Run(() => {
